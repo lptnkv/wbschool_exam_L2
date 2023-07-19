@@ -68,15 +68,21 @@ func TestCommand(t *testing.T) {
 }
 
 func TestChainOfResp(t *testing.T) {
-	expect := "Im handler 2"
+	expect := "Reception registering patient\nDoctor checking patient\nMedical giving medicine to patient\nCashier getting money from patient"
 
-	handlers := &ConcreteHandlerA{
-		next: &ConcreteHandlerB{
-			next: &ConcreteHandlerC{},
-		},
-	}
+	cashier := &Cashier{}
 
-	result := handlers.SendRequest(2)
+	medical := &Medical{}
+	medical.setNext(cashier)
+
+	doctor := &Doctor{}
+	doctor.setNext(medical)
+
+	reception := &Reception{}
+	reception.setNext(doctor)
+
+	patient := &Patient{name: "Kirill"}
+	result := reception.execute(patient)
 
 	if result != expect {
 		t.Errorf("Expect result to equal %s, but %s.\n", expect, result)

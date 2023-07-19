@@ -16,52 +16,110 @@ package pattern
 	а каждый получатель имеет единственную ссылку на своего преемника - последующий элемент в цепочке.
 */
 
-// Интерфейс обработчика
-type Handler interface {
-	SendRequest(message int) string
+// Помещение больницы
+type Department interface {
+	execute(*Patient) string
+	setNext(Department)
 }
 
-// Конкретный обработчик A
-type ConcreteHandlerA struct {
-	next Handler
+// Пациент
+type Patient struct {
+	name              string
+	registrationDone  bool
+	doctorCheckUpDone bool
+	medicineDone      bool
+	paymentDone       bool
 }
 
-// Имплементация метода отправки Запроса обработчиком A
-func (h *ConcreteHandlerA) SendRequest(message int) (result string) {
-	if message == 1 {
-		result = "Im handler 1"
-	} else if h.next != nil {
-		result = h.next.SendRequest(message)
+// Конкретный обработчик - Приемное отделение
+type Reception struct {
+	next Department
+}
+
+// Реализация метода обработки Пациента
+func (r *Reception) execute(p *Patient) string {
+	res := ""
+	if p.registrationDone {
+		res += "Patient registration already done\n"
+		r.next.execute(p)
+		return res
 	}
-	return
+	res += "Reception registering patient\n"
+	p.registrationDone = true
+	res += r.next.execute(p)
+	return res
 }
 
-// Конкретный обработчик B
-type ConcreteHandlerB struct {
-	next Handler
+// Метод добавления следующего обработчика
+func (r *Reception) setNext(next Department) {
+	r.next = next
 }
 
-// Имплементация метода отправки Запроса обработчиком B
-func (h *ConcreteHandlerB) SendRequest(message int) (result string) {
-	if message == 2 {
-		result = "Im handler 2"
-	} else if h.next != nil {
-		result = h.next.SendRequest(message)
+// Доктор
+type Doctor struct {
+	next Department
+}
+
+// Обработчик кабинета Доктора
+func (d *Doctor) execute(p *Patient) string {
+	res := ""
+	if p.doctorCheckUpDone {
+		res += "Doctor checkup already done\n"
+		d.next.execute(p)
+		return res
 	}
-	return
+	res += "Doctor checking patient\n"
+	p.doctorCheckUpDone = true
+	res += d.next.execute(p)
+	return res
 }
 
-// Конкретный обработчик C
-type ConcreteHandlerC struct {
-	next Handler
+// Метод добавления следующего обработчика
+func (d *Doctor) setNext(next Department) {
+	d.next = next
 }
 
-// Имплементация метода отправки Запроса обработчиком C
-func (h *ConcreteHandlerC) SendRequest(message int) (result string) {
-	if message == 3 {
-		result = "Im handler 3"
-	} else if h.next != nil {
-		result = h.next.SendRequest(message)
+// Аптека
+type Medical struct {
+	next Department
+}
+
+// Обработчик Аптеки
+func (m *Medical) execute(p *Patient) string {
+	res := ""
+	if p.medicineDone {
+		res += "Medicine already given to patient\n"
+		m.next.execute(p)
+		return res
 	}
-	return
+	res += "Medical giving medicine to patient\n"
+	p.medicineDone = true
+	res += m.next.execute(p)
+	return res
+}
+
+// Метод добавления следующего обработчика после Аптеки
+func (m *Medical) setNext(next Department) {
+	m.next = next
+}
+
+// Касса
+type Cashier struct {
+	next Department
+}
+
+// Обработчик Кассы
+func (c *Cashier) execute(p *Patient) string {
+	res := ""
+	if p.paymentDone {
+		res += "Payment Done"
+		return res
+	}
+	res += "Cashier getting money from patient"
+	return res
+}
+
+// Метод добавления следующего обработчика после Кассы
+func (c *Cashier) setNext(next Department) {
+	c.next = next
 }
