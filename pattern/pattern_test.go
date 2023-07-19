@@ -1,6 +1,7 @@
 package pattern
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -107,5 +108,25 @@ func TestFactory(t *testing.T) {
 			t.Errorf("Expected %s, but got %s\n", expect[i], res)
 		}
 	}
+}
 
+func TestStrategy(t *testing.T) {
+	data1 := []int{8, 2, 6, 7, 1, 3, 9, 5, 4}
+	data2 := []int{8, 2, 6, 7, 1, 3, 9, 5, 4}
+	expect := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	ctx := &Context{}
+
+	ctx.Algorithm(&BubbleSort{})
+	ctx.Sort(data1)
+
+	ctx.Algorithm(&InsertionSort{})
+	ctx.Sort(data2)
+
+	if !reflect.DeepEqual(data1, expect) {
+		t.Errorf("Expect data1 to equal %v, but got %v.\n", expect, data1)
+	}
+
+	if !reflect.DeepEqual(data2, expect) {
+		t.Errorf("Expect data2 to equal %v, but got %v.\n", expect, data2)
+	}
 }
