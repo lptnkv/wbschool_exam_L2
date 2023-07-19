@@ -48,3 +48,21 @@ func TestVisitorHuman(t *testing.T) {
 		t.Errorf("Expect result to equal %s, but %s.\n", expect, result)
 	}
 }
+
+func TestCommand(t *testing.T) {
+
+	expect := "Toggle On\n" +
+		"Toggle Off\n"
+
+	invoker := &Invoker{}
+	receiver := &Receiver{}
+
+	invoker.AddCommand(&ToggleOnCommand{receiver: receiver})
+	invoker.AddCommand(&ToggleOffCommand{receiver: receiver})
+
+	result := invoker.Execute()
+
+	if result != expect {
+		t.Errorf("Expect result to equal %s, but %s.\n", expect, result)
+	}
+}
