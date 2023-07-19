@@ -88,3 +88,24 @@ func TestChainOfResp(t *testing.T) {
 		t.Errorf("Expect result to equal %s, but %s.\n", expect, result)
 	}
 }
+
+func TestFactory(t *testing.T) {
+	expect := []string{
+		"shot from ak47",
+		"shot from musket",
+		"shot from simple gun",
+	}
+	factory := &GunFactory{}
+	guns := []IGun{
+		factory.CreateGun("ak47"),
+		factory.CreateGun("musket"),
+		factory.CreateGun("gun"),
+	}
+
+	for i, gun := range guns {
+		if res := gun.shoot(); res != expect[i] {
+			t.Errorf("Expected %s, but got %s\n", expect[i], res)
+		}
+	}
+
+}
