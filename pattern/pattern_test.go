@@ -130,3 +130,41 @@ func TestStrategy(t *testing.T) {
 		t.Errorf("Expect data2 to equal %v, but got %v.\n", expect, data2)
 	}
 }
+
+func TestState(t *testing.T) {
+	v := newVendingMachine(1, 10)
+	err := v.requestItem()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	err = v.insertMoney(10)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	err = v.dispenseItem()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	err = v.addItem(2)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	err = v.requestItem()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	err = v.insertMoney(10)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	err = v.dispenseItem()
+	if err != nil {
+		t.Error(err.Error())
+	}
+}
