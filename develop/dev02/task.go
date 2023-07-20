@@ -1,5 +1,11 @@
 package main
 
+import (
+	"fmt"
+	"strings"
+	"unicode"
+)
+
 /*
 === Задача на распаковку ===
 
@@ -19,5 +25,57 @@ package main
 */
 
 func main() {
+	res, err := rleDecode("abcd")
+	if err != nil {
+		fmt.Println("error:", err.Error())
+	} else {
+		fmt.Println(res)
+	}
 
+	res, err = rleDecode("")
+	if err != nil {
+		fmt.Println("error:", err.Error())
+	} else {
+		fmt.Println(res)
+	}
+
+	res, err = rleDecode("45")
+	if err != nil {
+		fmt.Println("error:", err.Error())
+	} else {
+		fmt.Println(res)
+	}
+
+	res, err = rleDecode("a5")
+	if err != nil {
+		fmt.Println("error:", err.Error())
+	} else {
+		fmt.Println(res)
+	}
+}
+
+func rleDecode(input string) (string, error) {
+	if input == "" {
+		return "", nil
+	}
+	runes := []rune(input)
+	if unicode.IsDigit(runes[0]) {
+		return "", fmt.Errorf("incorrect string")
+	}
+	var result strings.Builder
+	length := len(runes)
+	i := 0
+	for i < length {
+		if unicode.IsLetter(runes[i]) {
+			if i+1 < length && unicode.IsDigit(runes[i+1]) {
+				for j := 0; j < int(runes[i+1]-'0'); j++ {
+					result.WriteRune(runes[i])
+				}
+			} else if i+1 < length {
+				result.WriteRune(runes[i])
+			}
+		}
+		i++
+	}
+	return result.String(), nil
 }
