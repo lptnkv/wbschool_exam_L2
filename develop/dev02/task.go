@@ -52,6 +52,20 @@ func main() {
 	} else {
 		fmt.Println(res)
 	}
+
+	res, err = rleDecode("a5b3ch1")
+	if err != nil {
+		fmt.Println("error:", err.Error())
+	} else {
+		fmt.Println(res)
+	}
+
+	res, err = rleDecode("g20")
+	if err != nil {
+		fmt.Println("error:", err.Error())
+	} else {
+		fmt.Println(res)
+	}
 }
 
 func rleDecode(input string) (string, error) {
@@ -65,13 +79,23 @@ func rleDecode(input string) (string, error) {
 	var result strings.Builder
 	length := len(runes)
 	i := 0
+	// Идем по символам строки
 	for i < length {
+		// Встретили букву
 		if unicode.IsLetter(runes[i]) {
+			// Если следующая цифра и не вышли за границу строки
 			if i+1 < length && unicode.IsDigit(runes[i+1]) {
-				for j := 0; j < int(runes[i+1]-'0'); j++ {
-					result.WriteRune(runes[i])
+				cnt := int(runes[i+1] - '0')
+				symbolToWrite := runes[i]
+				i++
+				for i+1 < length && unicode.IsDigit(runes[i+1]) {
+					i++
+					cnt = cnt*10 + int(runes[i]-'0')
 				}
-			} else if i+1 < length {
+				for j := 0; j < cnt; j++ {
+					result.WriteRune(symbolToWrite)
+				}
+			} else {
 				result.WriteRune(runes[i])
 			}
 		}
