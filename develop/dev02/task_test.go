@@ -49,6 +49,24 @@ func TestRleDecode(t *testing.T) {
 			"gggggggggggggggggggg",
 			false,
 		},
+		{
+			7,
+			`qwe\4\5`,
+			"qwe45",
+			false,
+		},
+		{
+			8,
+			`qwe\45`,
+			"qwe44444",
+			false,
+		},
+		{
+			9,
+			`qwe\\5`,
+			`qwe\\\\\`,
+			false,
+		},
 	}
 	for _, testCase := range testCases {
 		got, err := rleDecode(testCase.input)
