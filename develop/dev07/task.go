@@ -33,6 +33,66 @@ start := time.Now()
 fmt.Printf(“fone after %v”, time.Since(start))
 */
 
-func main() {
+import (
+	"fmt"
+	"time"
+)
 
+func main() {
+	start := time.Now()
+	<-makeDone(
+		sig(2*time.Second),
+		sig(5*time.Second),
+		sig(1*time.Hour),
+		sig(6*time.Minute),
+		sig(10*time.Second),
+	)
+	fmt.Printf("fone after %v\n", time.Since(start))
+}
+
+// Функция создания done-канала и его закрытия при закрытии одного из переданных done-каналов
+func makeDone(channels ...<-chan interface{}) <-chan interface{} {
+	switch len(channels) {
+	case 0:
+		// Если передано 0 каналов, то возвращаем nil
+		return nil
+	case 1:
+		// Если передан один канал, то возвращаем его
+		return channels[0]
+	}
+
+	// Итоговый канал
+	orDone := make(chan interface{})
+
+	// Запускаем горутину, которая получает сигнал от любого из каналов и затем закрывает итоговый канал
+	go func() {
+		defer close(orDone)
+		switch len(channels) {
+		case 2:
+			// Если передано два канала, то дожидаемся done-сигнала от любого из них
+			select {
+			case <-channels[0]:
+			case <-channels[1]:
+			}
+		default:
+			// Если передано 3 и более каналов, то рекурсивно объединяем их и ждем сигнала от любого
+			select {
+			case <-channels[0]:
+			case <-channels[1]:
+			case <-channels[2]:
+			case <-makeDone(append(channels[3:], orDone)...):
+			}
+		}
+	}()
+	return orDone
+}
+
+// Функция для создания канала, который закроется спустя заданное время
+func sig(after time.Duration) <-chan interface{} {
+	c := make(chan interface{})
+	go func() {
+		defer close(c)
+		time.Sleep(after)
+	}()
+	return c
 }
