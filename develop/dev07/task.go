@@ -54,8 +54,13 @@ func main() {
 func makeDone(channels ...<-chan interface{}) <-chan interface{} {
 	switch len(channels) {
 	case 0:
-		// Если передано 0 каналов, то возвращаем nil
-		return nil
+		// Если передано 0 каналов, то создаем канал, отправляем сигнал о завершении в отдельной горутине и возвращаем его
+		orDone := make(chan interface{})
+		go func() {
+			orDone <- struct{}{}
+			close(orDone)
+		}()
+		return orDone
 	case 1:
 		// Если передан один канал, то возвращаем его
 		return channels[0]
