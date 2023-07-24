@@ -142,8 +142,7 @@ func (s *Shell) ps() error {
 		out = s.PipeBuff
 	}
 	for proc := range processList {
-		var process ps.Process
-		process = processList[proc]
+		process := processList[proc]
 		_, err = fmt.Fprintf(out, "%v\t%v\t%v\n", process.Pid(), process.PPid(), process.Executable())
 		if err != nil {
 			return err
@@ -240,7 +239,7 @@ func (s *Shell) CaseShell(line string) error {
 			if len(commandAndArgs) != 1 {
 				err := s.kill(commandAndArgs[1:])
 				if err != nil {
-					fmt.Fprintf(s.Out, err.Error())
+					fmt.Fprintln(s.Out, err.Error())
 				}
 			} else {
 				return fmt.Errorf("kill must have 1+ arguments")
@@ -274,7 +273,7 @@ func (s *Shell) CheckPipes(line string) error {
 				comm1 := strings.Fields(value)
 
 				if len(comm1) > 1 {
-					comm1New := make([]string, 2, 2)
+					comm1New := make([]string, 2)
 					comm1New[0], comm1New[1] = comm1[0], s.PipeBuff.String()
 					comm1 = comm1New
 				} else {
