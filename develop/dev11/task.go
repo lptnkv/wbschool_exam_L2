@@ -29,11 +29,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"time"
 )
 
 var (
-	events    map[int]Event
+	events    = make(map[int]Event)
 	idCounter = 0
 )
 
@@ -91,9 +92,22 @@ func Logging(next http.Handler) http.Handler {
 // Получение события из тела POST запроса
 func parseBody(r *http.Request) (Event, error) {
 	var e Event
-	err := json.NewDecoder(r.Body).Decode(&e)
+	err := r.ParseForm()
 	if err != nil {
 		return e, err
+	}
+	e.Date, err = time.Parse("2006-01-02", r.PostForm.Get("date"))
+	if err != nil {
+		return e, err
+	}
+	e.Name = r.PostForm.Get("name")
+
+	id := r.PostForm.Get("id")
+	if id != "" {
+		e.ID, err = strconv.Atoi(id)
+		if err != nil {
+			return e, err
+		}
 	}
 	return e, nil
 }
@@ -134,6 +148,8 @@ func updateEventHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	event, err := parseBody(r)
+	log.Printf("got event: %+#v\n", event)
+	log.Println(events)
 	if err != nil {
 		errResp := ErrorResp{"Bad request"}
 		jsonResponse(w, http.StatusBadRequest, errResp)
@@ -200,6 +216,7 @@ func dayEventsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(res) != 0 {
 		jsonEvents, err := json.Marshal(res)
+		log.Println(string(jsonEvents))
 		if err != nil {
 			errResp := ErrorResp{"Internal server error"}
 			jsonResponse(w, http.StatusInternalServerError, errResp)
@@ -207,6 +224,91 @@ func dayEventsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		resp := SuccessResp{string(jsonEvents)}
+		log.Println(resp)
+		jsonResponse(w, http.StatusOK, resp)
+		return
+	} else {
+		errResp := ErrorResp{"Not found"}
+		jsonResponse(w, http.StatusNotFound, errResp)
+		return
+	}
+}
+
+// Получение событий за неделю
+func weekEventsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		errResp := ErrorResp{"Method is not allowed"}
+		jsonResponse(w, http.StatusMethodNotAllowed, errResp)
+		return
+	}
+	date, err := time.Parse("2006-01-02", r.URL.Query().Get("date"))
+	if err != nil {
+		errResp := ErrorResp{"Bad request"}
+		jsonResponse(w, http.StatusBadRequest, errResp)
+		log.Printf("Could not parse url params: %v\n", err)
+		return
+	}
+	var res []Event
+	for _, event := range events {
+		start := date
+		end := date.AddDate(0, 0, 7)
+		if event.Date.Before(end) && event.Date.After(start) {
+			res = append(res, event)
+		}
+	}
+	if len(res) != 0 {
+		jsonEvents, err := json.Marshal(res)
+		log.Println(string(jsonEvents))
+		if err != nil {
+			errResp := ErrorResp{"Internal server error"}
+			jsonResponse(w, http.StatusInternalServerError, errResp)
+			log.Printf("Could not marshal json events: %v\n", err)
+			return
+		}
+		resp := SuccessResp{string(jsonEvents)}
+		log.Println(resp)
+		jsonResponse(w, http.StatusOK, resp)
+		return
+	} else {
+		errResp := ErrorResp{"Not found"}
+		jsonResponse(w, http.StatusNotFound, errResp)
+		return
+	}
+}
+
+// Получение событий за месяц
+func monthEventsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		errResp := ErrorResp{"Method is not allowed"}
+		jsonResponse(w, http.StatusMethodNotAllowed, errResp)
+		return
+	}
+	date, err := time.Parse("2006-01-02", r.URL.Query().Get("date"))
+	if err != nil {
+		errResp := ErrorResp{"Bad request"}
+		jsonResponse(w, http.StatusBadRequest, errResp)
+		log.Printf("Could not parse url params: %v\n", err)
+		return
+	}
+	var res []Event
+	for _, event := range events {
+		start := date
+		end := date.AddDate(0, 1, 0)
+		if event.Date.Before(end) && event.Date.After(start) {
+			res = append(res, event)
+		}
+	}
+	if len(res) != 0 {
+		jsonEvents, err := json.Marshal(res)
+		log.Println(string(jsonEvents))
+		if err != nil {
+			errResp := ErrorResp{"Internal server error"}
+			jsonResponse(w, http.StatusInternalServerError, errResp)
+			log.Printf("Could not marshal json events: %v\n", err)
+			return
+		}
+		resp := SuccessResp{string(jsonEvents)}
+		log.Println(resp)
 		jsonResponse(w, http.StatusOK, resp)
 		return
 	} else {
@@ -228,6 +330,8 @@ func main() {
 	mux.HandleFunc("/update_event", updateEventHandler)
 	mux.HandleFunc("/delete_event", deleteEventHandler)
 	mux.HandleFunc("/events_for_day", dayEventsHandler)
+	mux.HandleFunc("/events_for_week", weekEventsHandler)
+	mux.HandleFunc("/events_for_month", monthEventsHandler)
 
 	// Применение middleware к нашему роутеру
 	loggingHandler := Logging(mux)
@@ -246,6 +350,7 @@ func main() {
 
 	// Запуск сервера в отдельной горутине
 	go func() {
+		log.Println("Starting server at: ", config.GetAdr())
 		errs <- server.ListenAndServe()
 	}()
 
