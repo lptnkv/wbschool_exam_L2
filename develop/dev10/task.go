@@ -137,10 +137,10 @@ func NewConfig() *Config {
 
 // Метод инициализации конфигурации
 func (c *Config) InitConfig() {
-	flag.DurationVar(&c.TimeOutDuration, "timeout", 10*time.Second, "timeout duration")
+	flag.DurationVar(&c.TimeOutDuration, "t", 10*time.Second, "timeout duration")
 	flag.Parse()
 	if len(flag.Args()) != 2 {
-		log.Fatal("entered more or less then 2 arguments")
+		log.Fatal("You should enter 2 arguments")
 	}
 	c.Host, c.Port = flag.Arg(0), flag.Arg(1)
 }

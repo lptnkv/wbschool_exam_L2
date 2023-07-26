@@ -30,7 +30,7 @@ func merge(a, b <-chan int) <-chan int {
 	go func() {
 		for {
 			select {
-			// Нужна проверка на закрытие канала: v, ok := <- a; if !ok {a = nil} или done-канал
+			// Нужна проверка на закрытие канала: v, ok := <- a; 
 			case v := <-a:
 				c <- v
 			case v := <-b:
